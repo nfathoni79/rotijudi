@@ -8,12 +8,13 @@ const getName = name => {
   return apiClient.get(`/submissions.json?orderBy="name"&equalTo="${name}"&print=pretty`)
 }
 
-const postSubmission = (name, choice, random, won) => {
+const postSubmission = (name, choice, random, won, secret) => {
   return apiClient.post('/submissions.json', {
     name,
     choice,
     random,
     won,
+    secret,
     created: { '.sv': 'timestamp' }
   })
 }

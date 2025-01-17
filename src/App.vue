@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { confetti } from '@tsparticles/confetti'
+import CryptoJS from 'crypto-js'
 
 import AButton from './components/AButton.vue'
 import ARadioButton from './components/ARadioButton.vue'
@@ -14,6 +15,7 @@ const loading = ref(false)
 const name = ref('')
 const nameChecked = ref(false)
 const nameError = ref(false)
+const secretKey = import.meta.env.VITE_SECRET
 
 const choice = ref(null)
 const choiceSelected = ref(false)
@@ -33,6 +35,15 @@ const won = computed(() => {
     && randomResult.value <= winRate && revealCount.value >= 3)
 
   return wonByBread || wonByLottery
+})
+
+const secretName = computed(() => {
+  if (nameChecked.value) {
+    const encrypted = CryptoJS.AES.encrypt(name.value, secretKey)
+    return encrypted.toString()
+  }
+
+  return ''
 })
 
 watch([won, revealCount], async ([newWon, newCount]) => {
@@ -90,7 +101,8 @@ const saveResult = async () => {
   loading.value = true
 
   try {
-    await postSubmission(name.value, choice.value, randomResult.value, won.value)
+    await postSubmission(
+      name.value, choice.value, randomResult.value, won.value, secretName.value)
   } catch (error) {
     console.log(error)
   } finally {
