@@ -178,6 +178,8 @@ const saveResult = async () => {
       <p class="text-2xl sm:text-3xl font-semibold text-gray-900 uppercase tracking-wide">
         Selamat menikmati roti Anda, {{ name }}
       </p>
+
+      <img src="/eat.gif" alt="Eat" class="mt-8 mx-auto w-80" />
     </div>
 
     <div v-if="choiceSelected && choice == 1" class="mt-8">
@@ -206,6 +208,8 @@ const saveResult = async () => {
           Anda menang<br>
           <span class="text-3xl sm:text-4xl font-bold normal-case">Rp1.000.000.000</span>
         </p>
+
+        <img v-if="!won" src="/stomp.gif" alt="Stomp" class="mt-8 mx-auto w-80" />
       </div>
     </div>
 
