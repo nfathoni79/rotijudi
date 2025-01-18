@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { confetti } from '@tsparticles/confetti'
 import CryptoJS from 'crypto-js'
 
@@ -8,7 +8,7 @@ import ARadioButton from './components/ARadioButton.vue'
 import Spinner from './components/Spinner.vue'
 import LotteryPoint from './components/LotteryPoint.vue'
 
-import { getName, postSubmission } from './services/DbService'
+import { getAllSubmissions, getName, postSubmission } from './services/DbService'
 
 const loading = ref(false)
 
@@ -24,6 +24,8 @@ const winRate = 0.000001
 const randomResult = ref(1)
 const lotteryPoints = ref([1, 1, 1])
 const revealCount = ref(0)
+
+const stats = ref({ bread: 0, lotteryLost: 0, lotteryWon: 0, total: 0 })
 
 const nameValid = computed(() => {
   return name.value && name.value.length >= 3 && name.value.length <= 20
@@ -46,6 +48,14 @@ const secretName = computed(() => {
   return ''
 })
 
+const statsPercent = computed(() => {
+  return {
+    bread: stats.value.bread / stats.value.total * 100,
+    lotteryLost: stats.value.lotteryLost / stats.value.total * 100,
+    lotteryWon: stats.value.lotteryWon / stats.value.total * 100
+  }
+})
+
 watch([won, revealCount], async ([newWon, newCount]) => {
   if (newWon) {
     await startConfetti()
@@ -53,6 +63,35 @@ watch([won, revealCount], async ([newWon, newCount]) => {
   
   if (newWon || newCount >= 3) {
     await saveResult()
+  }
+})
+
+onMounted(async () => {
+  try {
+    const response = await getAllSubmissions()
+    const submissions = response.data
+
+    let bread = 0
+    let lotteryLost = 0
+    let lotteryWon = 0
+
+    for (const submissionId in submissions) {
+      const submission = submissions[submissionId]
+      const choice = submission.choice
+      const won = submission.won
+      const random = submission.random
+
+      if (choice == 0) bread++
+      if (choice == 1 && !won) lotteryLost++
+      if (choice == 1 && won && random <= winRate) lotteryWon++
+    }
+
+    stats.value.bread = bread
+    stats.value.lotteryLost = lotteryLost
+    stats.value.lotteryWon = lotteryWon
+    stats.value.total = bread + lotteryLost + lotteryWon
+  } catch (error) {
+    console.log(error)
   }
 })
 
@@ -210,6 +249,41 @@ const saveResult = async () => {
         </p>
 
         <img v-if="!won" src="/stomp.gif" alt="Stomp" class="mt-8 mx-auto w-80" />
+      </div>
+    </div>
+
+    <div v-if="choiceSelected && choice == 0 || revealCount >= 3" class="mt-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <p class="font-ultra text-2xl text-gray-900">
+            {{ Math.round(statsPercent.bread) }}%
+          </p>
+          <img src="/bread.svg" alt="Bread" class="h-10">
+        </div>
+
+        <div class="flex items-center gap-2">
+          <p class="font-ultra text-2xl text-gray-900">
+            {{ Math.round(statsPercent.lotteryLost) }}%
+          </p>
+          <img src="/bomb.svg" alt="Bread" class="h-6">
+        </div>
+
+        <div class="flex items-center gap-2">
+          <p class="font-ultra text-2xl text-gray-900">
+            {{ Math.round(statsPercent.lotteryWon) }}%
+          </p>
+          <p class="font-ultra text-2xl text-red-800">777</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-stretch border-2 border-gray-900
+        rounded-full overflow-hidden">
+        <div class="h-4 bg-yellow-700"
+          :style="`width: ${statsPercent.bread}%;`"></div>
+        <div class="h-4 bg-gray-700"
+          :style="`width: ${statsPercent.lotteryLost}%;`"></div>
+        <div class="h-4 bg-red-700"
+          :style="`width: ${statsPercent.lotteryWon}%;`"></div>
       </div>
     </div>
 
