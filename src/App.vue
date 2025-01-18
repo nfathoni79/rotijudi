@@ -21,7 +21,7 @@ const choice = ref(null)
 const choiceSelected = ref(false)
 
 const winRate = 0.000001
-const randomResult = ref(1)
+const randomResult = ref(null)
 const lotteryPoints = ref([1, 1, 1])
 const revealCount = ref(0)
 
@@ -40,8 +40,9 @@ const won = computed(() => {
 })
 
 const secretName = computed(() => {
-  if (nameChecked.value) {
-    const encrypted = CryptoJS.AES.encrypt(name.value, secretKey)
+  if (choiceSelected.value && randomResult.value != null) {
+    const nameRandom = `${name.value} ${randomResult.value}`
+    const encrypted = CryptoJS.AES.encrypt(nameRandom, secretKey)
     return encrypted.toString()
   }
 
@@ -83,7 +84,7 @@ onMounted(async () => {
 
       if (choice == 0) bread++
       if (choice == 1 && !won) lotteryLost++
-      if (choice == 1 && won && random <= winRate) lotteryWon++
+      if (choice == 1 && won && random <= winRate && random > 0) lotteryWon++
     }
 
     stats.value.bread = bread
@@ -118,8 +119,12 @@ const checkName = async () => {
 
 const selectChoice = () => {
   choiceSelected.value = true
-
-  if (choice.value == 1) doGamble()
+  
+  if (choice.value == 0) {
+    randomResult.value = 1
+  } else {
+    doGamble()
+  }
 }
 
 const doGamble = () => {
