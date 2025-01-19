@@ -25,7 +25,7 @@ const randomResult = ref(null)
 const lotteryPoints = ref([1, 1, 1])
 const revealCount = ref(0)
 
-const stats = ref({ bread: 0, lotteryLost: 0, lotteryWon: 0, total: 0 })
+const stats = ref({ bread: 5657, lotteryLost: 16956, lotteryWon: 0, total: 22613 })
 
 const nameValid = computed(() => {
   return name.value && name.value.length >= 3 && name.value.length <= 20
@@ -69,28 +69,28 @@ watch([won, revealCount], async ([newWon, newCount]) => {
 
 onMounted(async () => {
   try {
-    const response = await getAllSubmissions()
-    const submissions = response.data
+    // const response = await getAllSubmissions()
+    // const submissions = response.data
 
-    let bread = 0
-    let lotteryLost = 0
-    let lotteryWon = 0
+    // let bread = 0
+    // let lotteryLost = 0
+    // let lotteryWon = 0
 
-    for (const submissionId in submissions) {
-      const submission = submissions[submissionId]
-      const choice = submission.choice
-      const won = submission.won
-      const random = submission.random
+    // for (const submissionId in submissions) {
+    //   const submission = submissions[submissionId]
+    //   const choice = submission.choice
+    //   const won = submission.won
+    //   const random = submission.random
 
-      if (choice == 0) bread++
-      if (choice == 1 && !won) lotteryLost++
-      if (choice == 1 && won && random <= winRate && random > 0) lotteryWon++
-    }
+    //   if (choice == 0) bread++
+    //   if (choice == 1 && !won) lotteryLost++
+    //   if (choice == 1 && won && random <= winRate && random > 0) lotteryWon++
+    // }
 
-    stats.value.bread = bread
-    stats.value.lotteryLost = lotteryLost
-    stats.value.lotteryWon = lotteryWon
-    stats.value.total = bread + lotteryLost + lotteryWon
+    // stats.value.bread = bread
+    // stats.value.lotteryLost = lotteryLost
+    // stats.value.lotteryWon = lotteryWon
+    // stats.value.total = bread + lotteryLost + lotteryWon
   } catch (error) {
     console.log(error)
   }
