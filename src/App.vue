@@ -290,6 +290,12 @@ const saveResult = async () => {
         <div class="h-4 bg-red-700"
           :style="`width: ${statsPercent.lotteryWon}%;`"></div>
       </div>
+
+      <p class="mt-2 text-sm font-medium">
+        {{ (stats.total - stats.bread).toLocaleString('id-ID') }} roti
+        (Rp{{ ((stats.total - stats.bread) * 5000).toLocaleString('id-ID') }})
+        terbuang
+      </p>
     </div>
 
     <div v-if="loading" class="mt-8">
