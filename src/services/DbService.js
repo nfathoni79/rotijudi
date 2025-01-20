@@ -12,6 +12,10 @@ const getName = name => {
   return apiClient.get(`/submissions.json?orderBy="name"&equalTo="${name}"&print=pretty`)
 }
 
+const getStats = () => {
+  return apiClient.get('/stats.json?print=pretty')
+}
+
 const postSubmission = (name, choice, random, won, secret) => {
   return apiClient.post('/submissions.json', {
     name,
@@ -23,4 +27,14 @@ const postSubmission = (name, choice, random, won, secret) => {
   })
 }
 
-export { getAllSubmissions, getName, postSubmission }
+const patchStats = data => {
+  return apiClient.patch('/stats.json', data)
+}
+
+export {
+  getAllSubmissions,
+  getName,
+  getStats,
+  postSubmission,
+  patchStats,
+}

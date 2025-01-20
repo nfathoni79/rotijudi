@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { confetti } from '@tsparticles/confetti'
 import CryptoJS from 'crypto-js'
 
@@ -8,7 +8,13 @@ import ARadioButton from './components/ARadioButton.vue'
 import Spinner from './components/Spinner.vue'
 import LotteryPoint from './components/LotteryPoint.vue'
 
-import { getAllSubmissions, getName, postSubmission } from './services/DbService'
+import {
+  getAllSubmissions,
+  getName,
+  getStats,
+  postSubmission,
+  patchStats
+} from './services/DbService'
 
 const loading = ref(false)
 
@@ -25,7 +31,7 @@ const randomResult = ref(null)
 const lotteryPoints = ref([1, 1, 1])
 const revealCount = ref(0)
 
-const stats = ref({ bread: 5657, lotteryLost: 16956, lotteryWon: 0, total: 22613 })
+const stats = ref({ bread: 0, lotteryLost: 0, lotteryWon: 0, total: 0 })
 
 const nameValid = computed(() => {
   return name.value && name.value.length >= 3 && name.value.length <= 20
@@ -64,35 +70,8 @@ watch([won, revealCount], async ([newWon, newCount]) => {
   
   if (newWon || newCount >= 3) {
     await saveResult()
-  }
-})
-
-onMounted(async () => {
-  try {
-    // const response = await getAllSubmissions()
-    // const submissions = response.data
-
-    // let bread = 0
-    // let lotteryLost = 0
-    // let lotteryWon = 0
-
-    // for (const submissionId in submissions) {
-    //   const submission = submissions[submissionId]
-    //   const choice = submission.choice
-    //   const won = submission.won
-    //   const random = submission.random
-
-    //   if (choice == 0) bread++
-    //   if (choice == 1 && !won) lotteryLost++
-    //   if (choice == 1 && won && random <= winRate && random > 0) lotteryWon++
-    // }
-
-    // stats.value.bread = bread
-    // stats.value.lotteryLost = lotteryLost
-    // stats.value.lotteryWon = lotteryWon
-    // stats.value.total = bread + lotteryLost + lotteryWon
-  } catch (error) {
-    console.log(error)
+    await updateStats()
+    await getFinalStats()
   }
 })
 
@@ -151,6 +130,93 @@ const saveResult = async () => {
     console.log(error)
   } finally {
     loading.value = false
+  }
+}
+
+const updateStats = async () => {
+  loading.value = true
+
+  try {
+    const incrementValue = { '.sv': { increment: 1 } }
+
+    if (choice.value == 0) await patchStats({ bread: incrementValue })
+    
+    if (choice.value == 1 && !won.value) {
+      await patchStats({ lotteryLost: incrementValue })
+    }
+
+    if (choice.value == 1 && won.value) {
+      await patchStats({ lotteryWon: incrementValue })
+    }
+  } catch (error) {
+    console.log(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const getFinalStats = async () => {
+  loading.value = true
+
+  try {
+    const response = await getStats()
+    const dbStats = response.data
+    
+    const bread = dbStats.bread
+    const lotteryLost = dbStats.lotteryLost
+    const lotteryWon = dbStats.lotteryWon
+    const next = dbStats.next
+
+    if (next < Date.now()) {
+      await recreateStats()
+    } else {
+      stats.value.bread = bread
+      stats.value.lotteryLost = lotteryLost
+      stats.value.lotteryWon = lotteryWon
+      stats.value.total = bread + lotteryLost + lotteryWon
+    }
+  } catch (error) {
+    console.log(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const recreateStats = async () => {
+  try {
+    const response = await getAllSubmissions()
+    const submissions = response.data
+
+    let bread = 0
+    let lotteryLost = 0
+    let lotteryWon = 0
+
+    for (const submissionId in submissions) {
+      const submission = submissions[submissionId]
+      const choice = submission.choice
+      const won = submission.won
+      const random = submission.random
+
+      if (choice == 0) bread++
+      if (choice == 1 && !won) lotteryLost++
+      if (choice == 1 && won && random <= winRate && random > 0) lotteryWon++
+    }
+
+    stats.value.bread = bread
+    stats.value.lotteryLost = lotteryLost
+    stats.value.lotteryWon = lotteryWon
+    stats.value.total = bread + lotteryLost + lotteryWon
+
+    const dayTimestamp = 86400000
+    
+    await patchStats({
+      bread,
+      lotteryLost,
+      lotteryWon,
+      next: Date.now() + dayTimestamp,
+    })
+  } catch (error) {
+    console.log(error)
   }
 }
 </script>
