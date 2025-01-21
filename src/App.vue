@@ -75,7 +75,13 @@ watch([won, revealCount], async ([newWon, newCount]) => {
   }
 })
 
-const onPointRevealed = () => revealCount.value++
+const onPointRevealed = point => {
+  if (point == 0) {
+    revealCount.value += 3
+  } else {
+    revealCount.value++
+  }
+}
 
 const checkName = async () => {
   loading.value = true
@@ -303,7 +309,7 @@ const recreateStats = async () => {
         
         <div class="flex justify-center items-stretch gap-2">
           <LotteryPoint v-for="(point, key) in lotteryPoints" :key="key"
-            :value="point" @onRevealed="onPointRevealed" />
+            :value="point" @onRevealed="onPointRevealed(point)" />
         </div>
       </div>
 
