@@ -78,7 +78,7 @@ watch([won, revealCount], async ([newWon, newCount]) => {
 const onPointRevealed = point => {
   if (point == 0) {
     revealCount.value += 3
-  } else {
+  } else if (revealCount.value < 3) {
     revealCount.value++
   }
 }
@@ -228,8 +228,8 @@ const recreateStats = async () => {
 </script>
 
 <template>
-  <div class="mx-auto min-h-screen max-w-screen-sm bg-white
-    py-8 px-4 sm:px-8 text-center">
+  <div class="relative mx-auto min-h-screen max-w-screen-sm bg-white
+    pt-8 py-20 px-4 sm:px-8 text-center">
     <h1 class="font-ultra text-4xl text-gray-900 uppercase">
       Roti <span class="text-2xl">atau</span> Judi
     </h1>
@@ -372,6 +372,13 @@ const recreateStats = async () => {
 
     <div v-if="loading" class="mt-8">
       <Spinner />
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-full">
+      <a href="https://rockminus.vercel.app/"
+      class="font-medium text-gray-900 hover:text-red-800 hover:underline">
+      Batu Gunting Kertas Kurang Satu
+    </a>
     </div>
   </div>
 </template>
